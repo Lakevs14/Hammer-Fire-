@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hammer Fire — Remote Sensing Analysis | El Paso County, CO 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── TOKENS ─────────────────────────────────────────── */
+    :root {
+      --ash:     #0d0f0e;
+      --char:    #161a18;
+      --ember:   #e85d2f;
+      --glow:    #f4a261;
+      --sage:    #52796f;
+      --ice:     #a8dadc;
+      --paper:   #f1ede6;
+      --smoke:   #8a9ba8;
+      --white:   #ffffff;
+      --serif:   'DM Serif Display', Georgia, serif;
+      --sans:    'Instrument Sans', sans-serif;
+      --mono:    'DM Mono', monospace;
+    }
+
+    /* ── RESET ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--ash);
+      color: var(--paper);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE OVERLAY ───────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── NAV ─────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 3rem;
+      background: rgba(13,15,14,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(232,93,47,0.15);
+    }
+    .nav-brand {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--ember);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+    .nav-links a {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--smoke);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--ember); }
+
+    /* ── HERO ─────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 3rem 5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 60% 40%, rgba(232,93,47,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 20% 70%, rgba(244,162,97,0.07) 0%, transparent 60%),
+        linear-gradient(180deg, var(--ash) 0%, #0a1510 100%);
+    }
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(232,93,47,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,93,47,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .hero-tag {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--ember);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s forwards;
+    }
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(3rem, 7vw, 6.5rem);
+      line-height: 1.0;
+      color: var(--white);
+      max-width: 900px;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.4s forwards;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--ember);
+    }
+    .hero-sub {
+      margin-top: 1.8rem;
+      font-size: 1.05rem;
+      color: var(--smoke);
+      max-width: 560px;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.6s forwards;
+    }
+    .hero-meta {
+      display: flex;
+      gap: 2.5rem;
+      margin-top: 2.5rem;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.8s forwards;
+    }
+    .hero-meta-item { text-align: left; }
+    .hero-meta-item .val {
+      font-family: var(--serif);
+      font-size: 2rem;
+      color: var(--glow);
+      display: block;
+    }
+    .hero-meta-item .lbl {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--smoke);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      right: 3rem;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--smoke);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      writing-mode: vertical-rl;
+      opacity: 0;
+      animation: fadeUp 1s 1.2s forwards;
+    }
+
+    /* ── SECTIONS ────────────────────────────────────────── */
+    section {
+      padding: 6rem 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--ember);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+    .section-title {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      color: var(--white);
+      line-height: 1.15;
+      margin-bottom: 2rem;
+    }
+    .section-title em { font-style: italic; color: var(--glow); }
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, var(--ember), transparent);
+      margin: 0 0 4rem;
+      opacity: 0.3;
+    }
+
+    /* ── INTRODUCTION ────────────────────────────────────── */
+    #introduction { border-top: 1px solid rgba(255,255,255,0.05); }
+    .intro-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+    .intro-body p { color: #c8c4bc; margin-bottom: 1.2rem; font-size: 1rem; }
+    .rq-box {
+      background: var(--char);
+      border-left: 3px solid var(--ember);
+      padding: 1.5rem 1.8rem;
+      border-radius: 0 8px 8px 0;
+      margin-top: 1rem;
+    }
+    .rq-box .rq-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--ember);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .rq-box p { color: var(--paper); font-style: italic; margin: 0; }
+    .stat-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+    .stat-card {
+      background: var(--char);
+      border: 1px solid rgba(232,93,47,0.15);
+      border-radius: 10px;
+      padding: 1.4rem 1.6rem;
+      transition: border-color 0.3s;
+    }
+    .stat-card:hover { border-color: rgba(232,93,47,0.4); }
+    .stat-card .num {
+      font-family: var(--serif);
+      font-size: 2.4rem;
+      color: var(--glow);
+    }
+    .stat-card .desc {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--smoke);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 0.2rem;
+    }
+
+    /* ── BACKGROUND ──────────────────────────────────────── */
+    #background { background: var(--char); max-width: 100%; padding: 6rem 0; }
+    #background .inner { max-width: 1200px; margin: 0 auto; padding: 0 3rem; }
+    .bg-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .bg-card {
+      background: var(--ash);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 1.8rem;
+      transition: transform 0.3s, border-color 0.3s;
+    }
+    .bg-card:hover { transform: translateY(-4px); border-color: rgba(232,93,47,0.25); }
+    .bg-card .icon {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+    .bg-card h3 {
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      color: var(--white);
+      margin-bottom: 0.6rem;
+    }
+    .bg-card p { font-size: 0.88rem; color: var(--smoke); }
+    .bg-card cite {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--ember);
+      margin-top: 0.8rem;
+      font-style: normal;
+    }
+    .bg-body { color: #c8c4bc; font-size: 1rem; max-width: 800px; margin-bottom: 2rem; }
+
+    /* ── DATA ────────────────────────────────────────────── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+    }
+    .data-table th {
+      background: var(--ember);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.9rem 1.2rem;
+      text-align: left;
+    }
+    .data-table td {
+      padding: 0.85rem 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: #c8c4bc;
+    }
+    .data-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+    .data-table tr:hover td { background: rgba(232,93,47,0.05); }
+    .data-table td:first-child {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--glow);
+      font-weight: 500;
+    }
+
+    /* ── METHODS ─────────────────────────────────────────── */
+    #methods { background: none; }
+    .workflow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 2rem;
+      position: relative;
+    }
+    .workflow::before {
+      content: '';
+      position: absolute;
+      left: 1.5rem;
+      top: 0; bottom: 0;
+      width: 1px;
+      background: linear-gradient(180deg, var(--ember), transparent);
+    }
+    .workflow-step {
+      display: flex;
+      gap: 2rem;
+      padding: 1.5rem 0 1.5rem 4rem;
+      position: relative;
+    }
+    .step-num {
+      position: absolute;
+      left: 0;
+      width: 3rem;
+      height: 3rem;
+      background: var(--ember);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--white);
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .step-content h3 {
+      font-family: var(--serif);
+      font-size: 1.25rem;
+      color: var(--white);
+      margin-bottom: 0.4rem;
+    }
+    .step-content p { color: var(--smoke); font-size: 0.92rem; }
+    .code-block {
+      background: var(--char);
+      border: 1px solid rgba(232,93,47,0.2);
+      border-radius: 8px;
+      padding: 1.2rem 1.5rem;
+      margin-top: 1rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--ice);
+      overflow-x: auto;
+      white-space: pre;
+      line-height: 1.8;
+    }
+    .code-block .cm { color: var(--smoke); }
+    .code-block .kw { color: var(--ember); }
+    .code-block .fn { color: var(--glow); }
+    .code-block .st { color: var(--sage); }
+
+    /* ── FORMULA BOX ─────────────────────────────────────── */
+    .formula-box {
+      background: var(--char);
+      border: 1px solid rgba(168,218,220,0.2);
+      border-radius: 10px;
+      padding: 1.5rem 2rem;
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    .formula-box .formula {
+      font-family: var(--serif);
+      font-size: 1.4rem;
+      color: var(--ice);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .formula-box .formula-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--smoke);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    /* ── RESULTS ─────────────────────────────────────────── */
+    #results { background: var(--char); max-width: 100%; padding: 6rem 0; }
+    #results .inner { max-width: 1200px; margin: 0 auto; padding: 0 3rem; }
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    .result-card {
+      background: var(--ash);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 2rem;
+    }
+    .result-card h3 {
+      font-family: var(--serif);
+      font-size: 1.3rem;
+      color: var(--white);
+      margin-bottom: 0.8rem;
+    }
+    .result-card p { color: var(--smoke); font-size: 0.9rem; }
+    .severity-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .sev-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--smoke);
+    }
+    .sev-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .findings-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+      font-size: 0.88rem;
+    }
+    .findings-table th {
+      background: rgba(232,93,47,0.15);
+      color: var(--glow);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.8rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(232,93,47,0.3);
+    }
+    .findings-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: #c8c4bc;
+    }
+    .findings-table td:first-child {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--smoke);
+    }
+    .map-placeholder {
+      background: var(--ash);
+      border: 1px dashed rgba(232,93,47,0.3);
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .map-placeholder p {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--smoke);
+      margin-top: 0.5rem;
+    }
+    .map-placeholder .map-icon { font-size: 3rem; opacity: 0.4; }
+    .map-img {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(232,93,47,0.2);
+      margin-top: 2rem;
+      display: block;
+    }
+
+    /* ── CONCLUSIONS ─────────────────────────────────────── */
+    #conclusions { border-top: 1px solid rgba(255,255,255,0.05); }
+    .conclusion-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+    .conclusion-body p { color: #c8c4bc; margin-bottom: 1.2rem; font-size: 1rem; }
+    .limitation-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .limit-item {
+      background: var(--char);
+      border-radius: 8px;
+      padding: 1.2rem;
+      border-left: 2px solid var(--sage);
+    }
+    .limit-item h4 {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--sage);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+    .limit-item p { font-size: 0.82rem; color: var(--smoke); }
+
+    /* ── REFERENCES ──────────────────────────────────────── */
+    #references { background: var(--char); max-width: 100%; padding: 5rem 0; }
+    #references .inner { max-width: 1200px; margin: 0 auto; padding: 0 3rem; }
+    .ref-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      margin-top: 1.5rem;
+    }
+    .ref-list li {
+      padding: 1.2rem 1.5rem;
+      background: var(--ash);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      color: #c8c4bc;
+      border-left: 2px solid rgba(232,93,47,0.3);
+      line-height: 1.6;
+    }
+    .ref-list li a { color: var(--ice); text-decoration: none; }
+    .ref-list li a:hover { text-decoration: underline; }
+
+    /* ── FOOTER ──────────────────────────────────────────── */
+    footer {
+      padding: 2.5rem 3rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    footer p {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--smoke);
+      letter-spacing: 0.08em;
+    }
+    footer span { color: var(--ember); }
+
+    /* ── ANIMATIONS ──────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── RESPONSIVE ──────────────────────────────────────── */
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .hero { padding: 0 1.5rem 4rem; }
+      section { padding: 4rem 1.5rem; }
+      .intro-grid, .results-grid, .conclusion-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .bg-grid { grid-template-columns: 1fr; }
+      #background .inner, #results .inner, #references .inner { padding: 0 1.5rem; }
+      footer { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">🔥 Hammer Fire · 2026</div>
+  <ul class="nav-links">
+    <li><a href="#introduction">Introduction</a></li>
+    <li><a href="#background">Background</a></li>
+    <li><a href="#data">Data</a></li>
+    <li><a href="#methods">Methods</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#conclusions">Conclusions</a></li>
+    <li><a href="#references">References</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <p class="hero-tag">Remote Sensing Final Project · El Paso County, Colorado</p>
+  <h1>Mapping the <em>Hammer Fire</em> from Space</h1>
+  <p class="hero-sub">A satellite-based burn severity and extent analysis using Sentinel-2 imagery and the differenced Normalized Burn Ratio (dNBR) methodology.</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item">
+      <span class="val">20.07</span>
+      <span class="lbl">km² Burned</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="val">4,958</span>
+      <span class="lbl">Acres</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="val">10m</span>
+      <span class="lbl">Resolution</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="val">Apr 22</span>
+      <span class="lbl">Ignition Date</span>
+    </div>
+  </div>
+  <div class="scroll-hint">Scroll to explore ↓</div>
+</div>
+
+<!-- INTRODUCTION -->
+<section id="introduction">
+  <p class="section-tag reveal">01 — Introduction</p>
+  <h2 class="section-title reveal">Why did this fire <em>matter?</em></h2>
+  <div class="divider"></div>
+  <div class="intro-grid">
+    <div class="intro-body reveal">
+      <p>Wildfires represent one of the most rapidly escalating natural hazards in the western United States, with climate-driven conditions increasingly enabling faster ignition, broader spread, and more severe burn impacts. Colorado in particular has experienced a dramatic rise in wildfire frequency and intensity.</p>
+      <p>On April 22, 2026, the Hammer Fire ignited in El Paso County southeast of Colorado Springs near the unincorporated community of Hanover. Driven by high winds, low humidity, and critically dry vegetation, the fire grew to nearly 5,000 acres within 24 hours before being fully contained on April 23, 2026.</p>
+      <p>Remote sensing provides a scalable and repeatable alternative to costly ground-based surveys. Multispectral satellite imagery captures changes in surface reflectance caused by combustion and vegetation loss, enabling systematic detection and classification of burned areas at scale.</p>
+      <div class="rq-box">
+        <div class="rq-label">Research Question</div>
+        <p>How much area was burned by the Hammer Fire, and what was the spatial distribution of burn severity across the affected landscape?</p>
+      </div>
+    </div>
+    <div class="stat-stack reveal">
+      <div class="stat-card">
+        <div class="num">~5,000</div>
+        <div class="desc">Acres burned in &lt;24 hours</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">Apr 22–23</div>
+        <div class="desc">Fire duration, 2026</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">Hanover, CO</div>
+        <div class="desc">El Paso County — origin point</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">dNBR</div>
+        <div class="desc">Methodology — Key & Benson (2006)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BACKGROUND -->
+<div id="background">
+  <div class="inner">
+    <p class="section-tag reveal">02 — Background</p>
+    <h2 class="section-title reveal">Prior work &amp; <em>key concepts</em></h2>
+    <div class="divider"></div>
+    <p class="bg-body reveal">Remote sensing has become the primary tool for wildfire burn severity assessment. The foundational methodology — NBR and dNBR — was established by Key & Benson (2006) and operationalized nationally through the MTBS program. The transition from Landsat to Sentinel-2 for burn severity mapping has been well supported in recent literature, with 10-meter resolution offering significant advantages for smaller fire events.</p>
+    <div class="bg-grid">
+      <div class="bg-card reveal">
+        <div class="icon">📡</div>
+        <h3>Normalized Burn Ratio</h3>
+        <p>NBR exploits the contrast between NIR (high in healthy vegetation) and SWIR (high in burned ground) reflectance to detect fire-induced surface change.</p>
+        <cite>Key & Benson, 2006 — FIREMON</cite>
+      </div>
+      <div class="bg-card reveal">
+        <div class="icon">🛰️</div>
+        <h3>MTBS Program</h3>
+        <p>The Monitoring Trends in Burn Severity program operationalized dNBR nationally, mapping all large fires across the US using consistent Landsat-based protocols since 1984.</p>
+        <cite>Eidenshink et al., 2007 — Fire Ecology</cite>
+      </div>
+      <div class="bg-card reveal">
+        <div class="icon">🌍</div>
+        <h3>Sentinel-2 for Fire Mapping</h3>
+        <p>Recent studies confirm Sentinel-2's COPERNICUS/S2_SR_HARMONIZED collection is well-suited for multi-temporal burn area analysis, offering 10m resolution vs Landsat's 30m.</p>
+        <cite>Nistor et al., 2025 — Remote Sensing</cite>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DATA -->
+<section id="data">
+  <p class="section-tag reveal">03 — Data</p>
+  <h2 class="section-title reveal">Imagery &amp; <em>sources</em></h2>
+  <div class="divider"></div>
+  <p class="reveal" style="color:#c8c4bc; max-width:700px; margin-bottom:1.5rem;">All imagery was accessed through Google Earth Engine. Sentinel-2 Level-2A Surface Reflectance data was selected for its 10-meter spatial resolution, five-day revisit frequency, and free public availability. Cloud masking was applied using the QA60 bitmask, and median compositing minimized residual atmospheric noise.</p>
+  <table class="data-table reveal">
+    <thead>
+      <tr><th>Parameter</th><th>Details</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Satellite</td><td>ESA Sentinel-2A / 2B</td></tr>
+      <tr><td>Product</td><td>Level-2A Surface Reflectance (Atmospherically Corrected)</td></tr>
+      <tr><td>GEE Collection</td><td>COPERNICUS/S2_SR_HARMONIZED</td></tr>
+      <tr><td>Spatial Resolution</td><td>10 meters (Bands B4, B8, B12)</td></tr>
+      <tr><td>Pre-Fire Window</td><td>April 10 – April 21, 2026</td></tr>
+      <tr><td>Post-Fire Window</td><td>April 24 – May 5, 2026</td></tr>
+      <tr><td>Cloud Filter</td><td>&lt; 20% cloud cover per scene</td></tr>
+      <tr><td>Compositing Method</td><td>Median</td></tr>
+      <tr><td>Bands Used</td><td>B2, B3, B4 (RGB), B8 (NIR), B11, B12 (SWIR)</td></tr>
+      <tr><td>Study Area</td><td>El Paso County, CO — 38.45°N to 38.65°N, 104.30°W to 104.65°W</td></tr>
+      <tr><td>Platform</td><td>Google Earth Engine</td></tr>
+      <tr><td>Fire Event</td><td>Hammer Fire — April 22–23, 2026</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- METHODS -->
+<section id="methods">
+  <p class="section-tag reveal">04 — Methods</p>
+  <h2 class="section-title reveal">Processing <em>workflow</em></h2>
+  <div class="divider"></div>
+
+  <div class="formula-box reveal">
+    <span class="formula">NBR = (B8 − B12) / (B8 + B12)</span>
+    <span class="formula-label">Normalized Burn Ratio — Sentinel-2 Band 8 (NIR) &amp; Band 12 (SWIR)</span>
+  </div>
+  <div class="formula-box reveal">
+    <span class="formula">dNBR = NBR<sub>pre</sub> − NBR<sub>post</sub></span>
+    <span class="formula-label">Differenced NBR — positive values indicate burned area</span>
+  </div>
+
+  <div class="workflow">
+    <div class="workflow-step reveal">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <h3>Define Region of Interest</h3>
+        <p>A 35 × 22 km bounding polygon was defined around Hanover, El Paso County (38.45°N–38.65°N, 104.30°W–104.65°W) to fully contain the fire perimeter.</p>
+      </div>
+    </div>
+    <div class="workflow-step reveal">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <h3>Cloud Masking &amp; Compositing</h3>
+        <p>QA60 bitmask applied to remove cloud (bit 10) and cirrus (bit 11) pixels. Pixel values scaled to reflectance [0–1]. Median composites generated for each temporal window.</p>
+        <div class="code-block"><span class="kw">def</span> <span class="fn">mask_s2_clouds</span>(image):
+    qa = image.select(<span class="st">'QA60'</span>)
+    cloud_bit  = <span class="kw">1</span> &lt;&lt; <span class="kw">10</span>
+    cirrus_bit = <span class="kw">1</span> &lt;&lt; <span class="kw">11</span>
+    mask = qa.bitwiseAnd(cloud_bit).eq(<span class="kw">0</span>).And(
+           qa.bitwiseAnd(cirrus_bit).eq(<span class="kw">0</span>))
+    <span class="kw">return</span> image.updateMask(mask).divide(<span class="kw">10000</span>)</div>
+      </div>
+    </div>
+    <div class="workflow-step reveal">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <h3>NBR &amp; dNBR Computation</h3>
+        <p>NBR computed for pre- and post-fire composites using B8 (NIR) and B12 (SWIR). dNBR calculated by subtracting post-fire NBR from pre-fire NBR.</p>
+        <div class="code-block">nbr_pre  = img_pre.normalizedDifference([<span class="st">'B8'</span>, <span class="st">'B12'</span>])
+nbr_post = img_post.normalizedDifference([<span class="st">'B8'</span>, <span class="st">'B12'</span>])
+dnbr     = nbr_pre.subtract(nbr_post).rename(<span class="st">'dNBR'</span>)</div>
+      </div>
+    </div>
+    <div class="workflow-step reveal">
+      <div class="step-num">04</div>
+      <div class="step-content">
+        <h3>Severity Classification</h3>
+        <p>dNBR classified into discrete USGS severity classes using .where() chains in GEE. Binary burn mask applied at dNBR ≥ 0.10 threshold.</p>
+        <div class="code-block">dnbr_classified = (
+    dnbr.<span class="fn">where</span>(dnbr.lt(<span class="kw">0.10</span>),                     <span class="kw">0</span>)  <span class="cm"># unburned</span>
+        .<span class="fn">where</span>(dnbr.gte(<span class="kw">0.10</span>).And(dnbr.lt(<span class="kw">0.27</span>)), <span class="kw">1</span>)  <span class="cm"># low</span>
+        .<span class="fn">where</span>(dnbr.gte(<span class="kw">0.27</span>).And(dnbr.lt(<span class="kw">0.44</span>)), <span class="kw">2</span>)  <span class="cm"># moderate</span>
+        .<span class="fn">where</span>(dnbr.gte(<span class="kw">0.44</span>).And(dnbr.lt(<span class="kw">0.66</span>)), <span class="kw">3</span>)  <span class="cm"># high</span>
+        .<span class="fn">where</span>(dnbr.gte(<span class="kw">0.66</span>),                     <span class="kw">4</span>)  <span class="cm"># very high</span>
+)</div>
+      </div>
+    </div>
+    <div class="workflow-step reveal">
+      <div class="step-num">05</div>
+      <div class="step-content">
+        <h3>Area Calculation &amp; Export</h3>
+        <p>Burned area quantified using GEE's pixelArea() function. Four GeoTIFF outputs exported to Google Drive at 10m resolution. Four-panel PNG map generated via matplotlib.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<div id="results">
+  <div class="inner">
+    <p class="section-tag reveal">05 — Results</p>
+    <h2 class="section-title reveal">What the <em>satellite found</em></h2>
+    <div class="divider"></div>
+
+    <div class="results-grid">
+      <div class="result-card reveal">
+        <h3>Burned Area Extent</h3>
+        <p>dNBR analysis identified a total burned area of approximately <strong style="color:var(--glow)">20.07 km² (4,958 acres)</strong>, consistent with official containment reports. The burn perimeter was concentrated in a contiguous patch southeast of Fountain, CO, centered on the Hanover Road corridor.</p>
+      </div>
+      <div class="result-card reveal">
+        <h3>Severity Distribution</h3>
+        <p>The classified dNBR map reveals a spatially heterogeneous burn pattern. The majority of burned area fell within <strong style="color:var(--glow)">low to moderate severity classes</strong>, characteristic of wind-driven shortgrass prairie fires. Localized high-severity pockets were detected near the origin point.</p>
+        <div class="severity-legend">
+          <div class="sev-row"><div class="sev-swatch" style="background:#d3d3d3"></div>Unburned (dNBR &lt; 0.10)</div>
+          <div class="sev-row"><div class="sev-swatch" style="background:#ffffb2"></div>Low Severity (0.10 – 0.27)</div>
+          <div class="sev-row"><div class="sev-swatch" style="background:#fecc5c"></div>Moderate Severity (0.27 – 0.44)</div>
+          <div class="sev-row"><div class="sev-swatch" style="background:#f03b20"></div>High Severity (0.44 – 0.66)</div>
+          <div class="sev-row"><div class="sev-swatch" style="background:#7a0000"></div>Very High Severity (≥ 0.66)</div>
+        </div>
+      </div>
+    </div>
+
+    <table class="findings-table reveal" style="margin-top:2rem;">
+      <thead>
+        <tr><th>Metric</th><th>Value</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Total Burned Area</td><td>~20.07 km²</td></tr>
+        <tr><td>Total Burned Area (acres)</td><td>~4,958 acres</td></tr>
+        <tr><td>Dominant Severity Class</td><td>Low – Moderate</td></tr>
+        <tr><td>Fire Duration</td><td>~24 hours (Apr 22–23, 2026)</td></tr>
+        <tr><td>Imagery Source</td><td>Sentinel-2, 10m resolution</td></tr>
+        <tr><td>dNBR Burn Threshold</td><td>≥ 0.10 (Key & Benson, 2006)</td></tr>
+        <tr><td>Pre-Fire Composite</td><td>April 10–21, 2026</td></tr>
+        <tr><td>Post-Fire Composite</td><td>April 24 – May 5, 2026</td></tr>
+      </tbody>
+    </table>
+
+    <!-- Map figure — replace src with your actual exported PNG -->
+    <div class="map-placeholder reveal" id="map-figure">
+      <div class="map-icon">🗺️</div>
+      <p><strong style="color:var(--glow);">Figure 1:</strong> Four-panel burn severity map</p>
+      <p>Replace this placeholder by adding your exported <code>hammer_fire_map_fixed.png</code> to the site folder and updating the img tag below.</p>
+    </div>
+    <!-- UNCOMMENT and update path once you add the PNG to the site folder:
+    <img class="map-img reveal" src="hammer_fire_map_fixed.png"
+         alt="Four-panel Hammer Fire burn severity map showing pre-fire, post-fire, dNBR classification, and burn mask"/>
+    <p style="font-family:var(--mono);font-size:0.68rem;color:var(--smoke);margin-top:0.8rem;text-align:center;">
+      Figure 1. Hammer Fire burn severity analysis. Sentinel-2 imagery, April 2026. dNBR methodology per Key & Benson (2006).
+    </p>
+    -->
+  </div>
+</div>
+
+<!-- CONCLUSIONS -->
+<section id="conclusions">
+  <p class="section-tag reveal">06 — Conclusions</p>
+  <h2 class="section-title reveal">Findings &amp; <em>future work</em></h2>
+  <div class="divider"></div>
+  <div class="conclusion-grid">
+    <div class="conclusion-body reveal">
+      <p>It is worth noting that the dNBR classification misidentified several water body pixels as burned area — a known limitation of the NBR index, as water surfaces exhibit low NIR and high SWIR reflectance, mimicking burned ground and producing artificially elevated dNBR values.</p>
+      <p>This project successfully demonstrated the application of multispectral remote sensing to map the burn extent and severity of the 2026 Hammer Fire. Using Sentinel-2 imagery processed through Google Earth Engine, the dNBR methodology accurately delineated approximately 20.07 km² of burned area, consistent with the official containment report of 4,958 acres. The classified severity map revealed a predominantly low-to-moderate burn pattern characteristic of wind-driven shortgrass prairie fires, confirming that freely available 10-meter Sentinel-2 imagery provides a rapid, reproducible, and cost-effective approach for post-fire damage assessment.</p>
+      <p>Several limitations warrant acknowledgment. The dNBR thresholds were not calibrated against field-collected CBI measurements, and water body misclassification introduces minor area overestimation. Future work could apply an NDWI-based water mask prior to classification, incorporate post-fire NDVI time series to monitor vegetation recovery, or integrate machine learning classifiers to improve discrimination between low-severity burned pixels and spectrally similar dry grassland.</p>
+    </div>
+    <div class="limitation-list reveal">
+      <div class="limit-item">
+        <h4>Limitation</h4>
+        <p>No field CBI calibration — thresholds applied directly from Key & Benson (2006) without site-level validation.</p>
+      </div>
+      <div class="limit-item">
+        <h4>Limitation</h4>
+        <p>Water body misclassification produces minor burned area overestimation due to similar spectral signatures.</p>
+      </div>
+      <div class="limit-item">
+        <h4>Future Work</h4>
+        <p>Apply NDWI water mask prior to dNBR classification to remove false positives.</p>
+      </div>
+      <div class="limit-item">
+        <h4>Future Work</h4>
+        <p>NDVI time series analysis to monitor post-fire vegetation recovery across severity classes.</p>
+      </div>
+      <div class="limit-item">
+        <h4>Future Work</h4>
+        <p>ML classifiers (Random Forest, U-Net) to improve low-severity burn discrimination in semi-arid grassland.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REFERENCES -->
+<div id="references">
+  <div class="inner">
+    <p class="section-tag reveal">07 — References</p>
+    <h2 class="section-title reveal">Sources <em>cited</em></h2>
+    <div class="divider"></div>
+    <ul class="ref-list">
+      <li class="reveal">Eidenshink, J., Schwind, B., Brewer, K., Zhu, Z., Quayle, B., &amp; Howard, S. (2007). A project for monitoring trends in burn severity. <em>Fire Ecology, 3</em>(1), 3–21. <a href="https://doi.org/10.4996/fireecology.0301003" target="_blank">https://doi.org/10.4996/fireecology.0301003</a></li>
+      <li class="reveal">Gorelick, N., Hancher, M., Dixon, M., Ilyushchenko, S., Thau, D., &amp; Moore, R. (2017). Google Earth Engine: Planetary-scale geospatial analysis for everyone. <em>Remote Sensing of Environment, 202</em>, 18–27. <a href="https://doi.org/10.1016/j.rse.2017.06.031" target="_blank">https://doi.org/10.1016/j.rse.2017.06.031</a></li>
+      <li class="reveal">Key, C. H., &amp; Benson, N. C. (2006). Landscape assessment: Ground measure of severity, the Composite Burn Index; and remote sensing of severity, the Normalized Burn Ratio. In D. C. Lutes et al. (Eds.), <em>FIREMON: Fire Effects Monitoring and Inventory System</em>. USDA Forest Service, Rocky Mountain Research Station.</li>
+      <li class="reveal">KKTV 11 News. (2026, April 23). <em>Hammer Fire burns 4,958 acres in El Paso County.</em> <a href="https://www.kktv.com" target="_blank">kktv.com</a></li>
+      <li class="reveal">Nistor, C., et al. (2025). Burned areas mapping using Sentinel-2 data and a Rao's Q Index-based change detection approach: A case study in three Mediterranean islands' wildfires (2019–2022). <em>Remote Sensing, 17</em>(5), 830. <a href="https://doi.org/10.3390/rs17050830" target="_blank">https://doi.org/10.3390/rs17050830</a></li>
+      <li class="reveal">Bennet, M., &amp; Neguse, J. (2026, May 4). <em>Bennet, Neguse press Trump officials on plans for wildfire response and preparedness in Colorado ahead of fire season.</em> U.S. Senate. <a href="https://www.bennet.senate.gov" target="_blank">bennet.senate.gov</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>Hammer Fire Remote Sensing Analysis · El Paso County, CO · <span>2026</span></p>
+  <p>Data: ESA Copernicus Sentinel-2 · Platform: Google Earth Engine · Project: <span>remote-sensing-final-495416</span></p>
+</footer>
+
+<script>
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
